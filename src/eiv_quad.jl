@@ -1,11 +1,12 @@
 module eiv_quad
 
+using JuMP
+using DynamicPolynomials
 using SparseDynamicSystem
 using Random
 using LinearAlgebra
-using DynamicPolynomials
 
-export ball_sample, sphere_sample
+export ball_sample, sphere_sample, sys_vars, make_mult_quad, quad_mult
 
 greet() = print("Hello World!")
 

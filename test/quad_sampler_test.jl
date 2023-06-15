@@ -1,5 +1,6 @@
-using Random 
 using eiv_quad
+using Random
+using JuMP
 rng = MersenneTwister(135);
 
 # 2nd order system

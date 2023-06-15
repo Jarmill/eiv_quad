@@ -1,6 +1,6 @@
-using eiv_quad
 using JuMP
-
+using DynamicPolynomials
+using eiv_quad
 model = Model();
 
 n = 2;
@@ -11,5 +11,5 @@ order = 1;
 @polyvar B[1:n, 1:m];
 
 
-vs = vars(A, B)
+vs = sys_vars(A, B)
 qm = make_mult_quad(model, vs, order);

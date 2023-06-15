@@ -46,7 +46,7 @@ function make_mult_quad(model, vars, order)
     zsum = 0;
     for i = 1:n
         #declare the PSD matrix variable 
-        Gram_curr = @variable(model, [1:len_gram, 1:len_gram], PSD);
+        Gram_curr = JuMP.@variable(model, [1:len_gram, 1:len_gram], PSD);
         Gram[i] = Gram_curr;
 
         #store the Gram matrix pieces
@@ -66,7 +66,7 @@ function make_mult_quad(model, vars, order)
     for i = 1:n
         corner_diff = zsum - zcorner[i];
         corner_coeff = coefficients(corner_diff, monomials(corner_diff));
-        @constraint!(model, corner_coeff==0);
+        JuMP.@constraint!(model, corner_coeff==0);
     end
 
     return quad_mult(s, z, Gram)
