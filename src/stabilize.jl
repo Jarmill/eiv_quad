@@ -6,7 +6,7 @@ mutable struct struct_data
     tol         #The tolerance of enforcing superstability (default 1e-6)
 end
 
-mutable struct vars #store the polynomial variables
+mutable struct sys_vars #store the polynomial variables
     A
     B
 end
@@ -17,5 +17,7 @@ function make_sys_vars(data)
     m = size(U, 1);
 
     @polyvar A[1:n, 1:n]
-    @polyvar B[1:n, 1:m]    
+    @polyvar B[1:n, 1:m] 
+    
+    return sys_vars(A, B)
 end
