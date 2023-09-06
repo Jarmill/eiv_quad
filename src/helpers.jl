@@ -34,5 +34,5 @@ function ball_sample(N, d)
     
     return X;
 
-    end
+end
     

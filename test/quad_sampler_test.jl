@@ -1,5 +1,6 @@
 using eiv_quad
 using Random
+using Revise
 using JuMP
 rng = MersenneTwister(135);
 

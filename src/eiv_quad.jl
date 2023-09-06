@@ -4,9 +4,10 @@ using JuMP
 using DynamicPolynomials
 using SparseDynamicSystem
 using Random
+using Revise
 using LinearAlgebra
 
-export ball_sample, sphere_sample, sys_vars, make_mult_quad, quad_mult
+export ball_sample, sphere_sample, sys_vars, make_mult_quad,  make_mult_quad_dense, quad_mult
 
 greet() = print("Hello World!")
 
