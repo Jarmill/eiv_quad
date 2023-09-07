@@ -7,7 +7,8 @@ using Random
 using Revise
 using LinearAlgebra
 
-export ball_sample, sphere_sample, sys_vars, make_mult_quad,  make_mult_quad_dense, quad_mult, generate_data, system
+export ball_sample, sphere_sample, generate_data, system,
+sys_vars, make_mult_quad, quad_mult, quad_psatz, make_sys_vars
 
 greet() = print("Hello World!")
 

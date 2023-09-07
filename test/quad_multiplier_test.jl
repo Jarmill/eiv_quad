@@ -13,5 +13,5 @@ order = 1;
 
 vs = sys_vars(A, B)
 # qm = make_mult_quad(model, vs, order);
-qm = make_mult_quad_dense(model, vs, order);
-qms = make_mult_quad(model, vs, order);
+qm = make_mult_quad(model, vs, order, 0);
+qms = make_mult_quad(model, vs, order, 1);

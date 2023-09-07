@@ -17,10 +17,18 @@ umax = 1;           # input bound
 T = 12;             # Time horizon
 R = 0.15;           # radius for sampling
     
-
+model = Model();
 # epsilon = [R; 0; 0];
-epsilon = [R; 0; 0];
+epsilon = [R; R; 0];
 sigma = [I, I, I];
 sys = system(A, B);
 data = generate_data(sys, T, umax, epsilon, sigma, rng);
 
+#test out the psatz
+# vs = sys_vars(A, B)
+vs = make_sys_vars(data);
+
+order = 1;
+q = tr(vs.A.^2) + 1;
+ps = quad_psatz(q, order, model, data, vs)
+ps_sparse = quad_psatz(q, order, model, data, vs, true)

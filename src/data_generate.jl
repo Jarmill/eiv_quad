@@ -3,7 +3,7 @@ mutable struct struct_data
     X           #The noisy state data
     U           #The noisy input data
     Sigma       #The covariance matrices of the noise
-    epslion     #The levels of the noise    
+    epsilon     #The levels of the noise    
     tol         #The tolerance of enforcing superstability (default 1e-6)
 end
 

@@ -1,21 +1,24 @@
 mutable struct psatz
     mu      #equality constrained multipliers
-    s
-    z       #polynomials 
-    Gram    #Gram matrices for the multipliers
+    quad_x  #x: polynomials (s, tau) from quad_mult    
+    quad_u  #u: polynomials (s, tau) from quad_mult    
 end
 
 mutable struct quad_mult
-    s
-    tau
-    Gram
+    s       #poly vector inside the SOC
+    tau     #poly vector for the SOC radius
+    Gram    #Gram matrices in the certificate
 end
 
-mutable struct quad_mult_dense
-    s
-    tau
-    Gram
-    Zeta
+function make_mult_quad(model, vars, order, SPARSE=true)
+    quad_out = 0;
+    if SPARSE
+        quad_out = make_mult_quad_sparse(model, vars, order);        
+    else
+        quad_out = make_mult_quad_dense(model, vars, order);
+    end
+
+    return quad_out;
 end
 
 function make_mult_quad_dense(model, vars, order)
@@ -91,7 +94,7 @@ function make_mult_quad_dense(model, vars, order)
 
         #add the constraints
 
-    return quad_mult_dense(s, tau, Gram, Zeta)
+    return quad_mult(s, tau, Gram)
 
 
 end
@@ -148,8 +151,8 @@ function make_mult_psd_dense(model, vars, order)
 
 end
 
-function make_mult_quad(model, vars, order)
-    #make_mult_quad: create the multipliers associated with a single robust SOC constraint:
+function make_mult_quad_sparse(model, vars, order)
+    #make_mult_quad_sparse: create the multipliers associated with a single robust SOC constraint:
     #
     #[sum_i z_it, s_it; s_it, z_it] in SOS^2[A, B]. Each time index t has its own SOC constraint
     #    
@@ -212,6 +215,105 @@ function make_mult_quad(model, vars, order)
 
 end
 
-function make_mult(data, vars)
+function quad_psatz(q, order, model, data, vars, SPARSE=false)
+#enforce that q>=0 over the consistency set described in data
+# (assume only x-noise for now)
+    #create the multipliers 
+    n = size(data.X, 1);
+    m = size(data.U, 1);
+    T = size(data.U, 2);
+
+        
+
+    vars_flat = vec([vars.A vars.B]);
+
+    #create the residual
+    Xnext = data.X[:, 2:end];
+    Xprev = data.X[:, 1:end-1];
+    U = data.U[:, 1:end-1];
+    h0 = Xnext - vars.A*Xprev - vars.B*U;
+
+    #the contribution such that q==psatz_term
+    psatz_term = 0;
+
+    #form mu (equality constraint multipliers)
+    mu = Array{Polynomial}(undef, n, T-1);
+    for k = 1:(T-1)
+        for j = 1:n
+            mucurr, mucurrc, mucurrb = add_poly!(model, vars_flat, 2*order-1);
+            mu[j, k] = mucurr;
+        end
+        # v, vc, vb = add_poly!(model, x, 2d)
+        # psatz_term = psatz_term + mu[:, k]'*h0[k];
+    end
+    psatz_term = sum(mu .* h0);
+
+    #form quad (the quadratic inequality constraints (s, tau))    
+    if data.epsilon[1] > 0
+        quad_x = Array{quad_mult}(undef, T, 1);
+        for k = 1:T        
+            quad_x[k] = make_mult_quad(model, vars, order, SPARSE);        
+        end
+    else
+        quad_x = zeros(T, 1);
+    end
+
+    #form quad_u (quadratic inequality constraints for u)
+    if data.epsilon[2] > 0
+        quad_u = Array{quad_mult}(undef, T-1, 1);
+        for k = 1:T-1        
+            quad_u[k] = make_mult_quad(model, vars, order, SPARSE);        
+        end
+    else
+        quad_u = zeros(T-1, 1);
+    end
     
+    #now iterate through the constraints (for x)
+    s_sig_x = sqrt(data.Sigma[1]);
+    s_sig_u = sqrt(data.Sigma[1]);
+    for k = 1:T
+        
+        if data.epsilon[1] > 0
+            s_term_x = -s_sig_x \ quad_x[k].s;
+            mu_con_x = mu_eq_con(T, k, mu, vars.A);
+
+            for i=1:n
+                @constraint(model, coefficients(s_term_x[i] - mu_con_x[i])==0);
+            end
+
+            psatz_term = psatz_term + quad_x[k].tau*data.epsilon[1];    
+        end
+
+        if (data.epsilon[2] > 0) & (k<= T-1)
+            s_term_u = -s_sig_u \ quad_u[k].s;
+            mu_con_u = vars.B'*mu[:, k];
+
+            for j = 1:m
+                @constraint(model, coefficients.(s_term_u[j] - mu_con_u[j])==0);
+            end
+            psatz_term = psatz_term + quad_u[k].tau*data.epsilon[2];    
+        end
+                
+    end
+
+    #seal up with the psatz constraint
+    model = add_psatz!(model, q-psatz_term, vars_flat, [], [],order);
+    # @constraint(model, coefficients)
+    
+    # quad_u = 0
+    return psatz(mu, quad_x, quad_u);
+end
+
+function mu_eq_con(T, k, mu, A)
+    #the equality constraint involved in data-consistency
+    #(assuming no process noise)
+    #process noise will be added later
+    mu_con = 0*mu[:, 1];
+    if k<=T-1
+        mu_con = mu_con + A'*mu[:, k];
+    end
+    if k>=2
+        mu_con = mu_con - mu[:, k-1];
+    end
+    return mu_con;
 end
