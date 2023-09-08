@@ -3,6 +3,9 @@
 #
 #the noise has a normal distribution
 #
+#safety probability 90%
+#true lambda: 0.7329679715748868
+#worst-case lambda: 0.997191322841913
 #
 #
 
@@ -24,9 +27,9 @@ n = size(B, 1);
 m = size(B, 2);
 
 umax = 1;           # input bound
-T = 18;             # Time horizon
-Rx = 0.03;           # radius for sampling (works for R=0.5)
-Ru = 0.03;           # radius for sampling (works for R=0.5)
+T = 14;             # Time horizon
+Rx = 0.02;           # radius for sampling (works for R=0.5)
+Ru = 0.02;           # radius for sampling (works for R=0.5)
     
 model = Model();
 #standard deviations of noise process
@@ -38,9 +41,9 @@ data = generate_data(sys, T, umax, epsilon, sigma, rng, true);
 #quantile for chi square, (sum of squares, so need to square Rx and Ru)
 # safe scheme by Lemma 5 of https://arxiv.org/pdf/2211.05639.pdf
 P_safe = 0.9;
-P_error_unit = P_safe^(1/(2*T));
-chi_quantile_x = sqrt(chisqinvcdf(n, P_error_unit)*Rx^2);
-chi_quantile_u = sqrt(chisqinvcdf(m, P_error_unit)*Ru^2);
+P_error_unit = P_safe^(1/(2*T-1));
+chi_quantile_x = Rx*sqrt(chisqinvcdf(n, P_error_unit));
+chi_quantile_u = Ru*sqrt(chisqinvcdf(m, P_error_unit));
 # chi_quantile_x = chisqinvcdf(n, 1-P_error)*Rx^2;
 # chi_quantile_u = chisqinvcdf(m, 1-P_error)*Ru^2;
 # prob_safe = (1-P_error)^(2*T);
