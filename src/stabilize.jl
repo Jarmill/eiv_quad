@@ -73,7 +73,6 @@ function ss_quad(data, order, SPARSE=false)
     #get the data properties and form variables
     n = size(data.X, 1);
     m = size(data.U, 1);
-    T = size(data.U, 2);
     vs = make_sys_vars(data);
     vars_flat = vec([vs.A vs.B]);
 
@@ -117,18 +116,20 @@ function ss_quad(data, order, SPARSE=false)
 
     objv = objective_value(model);  
     status = termination_status(model)
-    if status != MOI.OPTIMAL
+
+    status_opt = (status==MOI.OPTIMAL) || (status == SLOW_PROGRESS);
+    if !status_opt
         println("termination status: $status")
         status = primal_status(model)
         println("solution status: $status")
         lam_rec = Inf;
         K_rec = [];
     else
-        K_rec = value(K);
+        K_rec = value.(K);
         lam_rec = value(lambda);
     end    
 
-    output = output_ss(lam_rec, K_rec, status, blocksize);
+    output = output_ss(status_opt, K_rec, lam_rec, blocksize);
 
     #recover the solution, process the output
     # output =  slice_recover(model, vars, poly, order, opts, info);

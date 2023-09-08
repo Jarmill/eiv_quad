@@ -22,7 +22,7 @@ function generate_data(sys, T, umax, epsilon, Sigma, rng)
 
     if typeof(epsilon) != Vector{Float64}
         #[eps_x, eps_u, eps_w]
-        epsilon = epsilon*[1; 0; 0];
+        epsilon = epsilon.*[1; 0; 0];
         Sigma = [Sigma, Sigma, Sigma];
     end
 
