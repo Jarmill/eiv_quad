@@ -277,7 +277,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
         for k = 1:(T-1)
             mu[k] = make_mult_quad(n, model, vars, order-1, SPARSE);        
             blocksize = [blocksize; mu[k].blocksize];
-            # v, vc, vb = add_poly!(model, x, 2d)        
+            
             psatz_term = psatz_term + sum(vec(mu[k].s).*h0[:, k]);
             psatz_term = psatz_term + mu[k].tau*data.epsilon[3]; #check the sign, might be -tau
         end
@@ -295,8 +295,9 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
                 # mu[k].s = coeff_curr'*mon;
             
 
-                mucurr, mucurrc, mucurrb = add_poly!(model, vars_flat, 2*order-1);
-                s_curr[j] = mucurr;
+                # mucurr, mucurrc, mucurrb = add_poly!(model, vars_flat, 2*order-1);
+                
+                s_curr[j] = make_poly(model, vars_flat, 2*order-1);
             end   
             mu[k] = quad_mult(vec(s_curr), 0, [], []);         
             psatz_term = psatz_term + sum(vec(s_curr).*h0[:, k]);

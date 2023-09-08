@@ -8,7 +8,8 @@ using Revise
 using LinearAlgebra
 
 export ball_sample, sphere_sample, generate_data, system,
-sys_vars, make_mult_quad, quad_mult, quad_psatz, make_sys_vars
+sys_vars, make_mult_quad, quad_mult, quad_psatz, make_sys_vars,
+ss_clean, ss_quad, system
 
 greet() = print("Hello World!")
 

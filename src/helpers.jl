@@ -36,3 +36,10 @@ function ball_sample(N, d)
 
 end
     
+
+function make_poly(model, vars, degree)
+    #inspired by add_poly! from https://github.com/wangjie212/SparseDynamicSystem/
+    mon = reverse(monomials(vars, 0:degree))
+    coeff = @variable(model, [1:length(mon)])
+    return coeff'*mon    
+end
