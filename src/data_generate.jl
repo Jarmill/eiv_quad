@@ -12,7 +12,7 @@ struct system
     B    
 end
 
-function generate_data(sys, T, umax, epsilon, Sigma, rng)
+function generate_data(sys, T, umax, epsilon, Sigma, rng, normal=false)
     #generate a trajectory with only x-type noise
     #add u-type noise later
     n = size(sys.B, 1);
@@ -29,16 +29,22 @@ function generate_data(sys, T, umax, epsilon, Sigma, rng)
     #create the noise processes
     # s_Sigma = sqrt.(Sigma);
 
-    x_noise_base = ball_sample(T, n)';
-    u_noise_base = ball_sample(T, m)';
-    w_noise_base = ball_sample(T, n)';
+    X = zeros(n, T);
+    X[:, 1] = rand!(rng, zeros(2, 1));
 
+    if normal        
+        x_noise_base = randn!(rng, zeros(n, T));
+        u_noise_base = randn!(rng, zeros(m, T));
+        w_noise_base = randn!(rng, zeros(n, T));
+    else
+        x_noise_base = ball_sample(T, n)';
+        u_noise_base = ball_sample(T, m)';
+        w_noise_base = ball_sample(T, n)';
+    end
     x_noise = epsilon[1]*(sqrt(Sigma[1]) \ x_noise_base);
     u_noise = epsilon[2]*(sqrt(Sigma[2]) \ u_noise_base);
     w_noise = epsilon[3]*(sqrt(Sigma[3]) \ w_noise_base);
 
-    X = zeros(n, T);
-    X[:, 1] = rand!(rng, zeros(2, 1));
     BU = sys.B*U;
     w_noise_base = ball_sample(T, n)';
     for t in 1:T-1

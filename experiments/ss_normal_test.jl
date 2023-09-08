@@ -1,0 +1,68 @@
+#superstabilization of a system under elementwise-l2-bounded input and measurement noise
+#
+#
+#the noise has a normal distribution
+#
+#
+#
+
+
+using eiv_quad
+using Random
+using Revise
+using JuMP
+using LinearAlgebra
+using StatsFuns
+rng = MersenneTwister(13);
+
+# 2nd order system
+A = [0.6863    0.3968
+    0.3456    1.0388];
+B = [0.4170    0.0001
+    0.7203    0.3023];
+n = size(B, 1);
+m = size(B, 2);
+
+umax = 1;           # input bound
+T = 18;             # Time horizon
+Rx = 0.03;           # radius for sampling (works for R=0.5)
+Ru = 0.03;           # radius for sampling (works for R=0.5)
+    
+model = Model();
+#standard deviations of noise process
+epsilon = [Rx; Ru; 0]
+sigma = [I, I, I];
+sys = system(A, B);
+data = generate_data(sys, T, umax, epsilon, sigma, rng, true);
+
+#quantile for chi square, (sum of squares, so need to square Rx and Ru)
+# safe scheme by Lemma 5 of https://arxiv.org/pdf/2211.05639.pdf
+P_safe = 0.9;
+P_error_unit = P_safe^(1/(2*T));
+chi_quantile_x = sqrt(chisqinvcdf(n, P_error_unit)*Rx^2);
+chi_quantile_u = sqrt(chisqinvcdf(m, P_error_unit)*Ru^2);
+# chi_quantile_x = chisqinvcdf(n, 1-P_error)*Rx^2;
+# chi_quantile_u = chisqinvcdf(m, 1-P_error)*Ru^2;
+# prob_safe = (1-P_error)^(2*T);
+
+epsilon_chi = [chi_quantile_x; chi_quantile_u; 0];
+data_chi = data;
+data_chi.epsilon = epsilon_chi;
+
+
+#test out the psatz
+vs = make_sys_vars(data);
+
+order = 1;
+
+ss_out_sparse = ss_quad(data_chi, order, true);
+# ss_out_dense = ss_quad(data, order, false);
+
+#in this experiment, sparse succeeds and dense fails
+if ss_out_sparse.status
+    Acl_sparse = sys.A + sys.B*ss_out_sparse.K;
+
+    eig_sparse = eigvals(Acl_sparse);
+    lam_sparse = maximum(sum(Acl_sparse, dims=2));
+
+end
