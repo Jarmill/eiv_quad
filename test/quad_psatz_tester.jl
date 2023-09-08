@@ -30,5 +30,5 @@ vs = make_sys_vars(data);
 
 order = 1;
 q = tr(vs.A.^2) + 1;
-ps = quad_psatz(q, order, model, data, vs)
-ps_sparse = quad_psatz(q, order, model, data, vs, true)
+ps = quad_psatz(q, order, model, data, vs);
+ps_sparse = quad_psatz(q, order, model, data, vs, true);

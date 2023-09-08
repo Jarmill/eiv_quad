@@ -1,6 +1,7 @@
 using JuMP
 using DynamicPolynomials
 using eiv_quad
+using Revise
 model = Model();
 
 n = 2;
@@ -13,5 +14,7 @@ order = 1;
 
 vs = sys_vars(A, B)
 # qm = make_mult_quad(model, vs, order);
-qm = make_mult_quad(model, vs, order, 0);
-qms = make_mult_quad(model, vs, order, 1);
+qm = make_mult_quad(n, model, vs, order, false);
+qms = make_mult_quad(n, model, vs, order, true);
+
+qms3 = make_mult_quad(3, model, vs, order, true);

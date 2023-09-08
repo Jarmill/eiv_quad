@@ -1,27 +1,33 @@
+#altern_psatz.jl
+#certify that a polynomial q(A, B) is nonnegative over the L2-specified consistency set
+#use a theorem of alternatives to get a simpler program
+
 mutable struct psatz
     mu      #equality constrained multipliers
     quad_x  #x: polynomials (s, tau) from quad_mult    
-    quad_u  #u: polynomials (s, tau) from quad_mult    
+    quad_u  #u: polynomials (s, tau) from quad_mult   
+    blocksize #sizes of PSD matrices involved in the constraint 
 end
 
 mutable struct quad_mult
     s       #poly vector inside the SOC
     tau     #poly vector for the SOC radius
     Gram    #Gram matrices in the certificate
+    blocksize #size of the Gram matrices
 end
 
-function make_mult_quad(model, vars, order, SPARSE=true)
+function make_mult_quad(n, model, vars, order, SPARSE=true)
     quad_out = 0;
     if SPARSE
-        quad_out = make_mult_quad_sparse(model, vars, order);        
+        quad_out = make_mult_quad_sparse(n, model, vars, order);        
     else
-        quad_out = make_mult_quad_dense(model, vars, order);
+        quad_out = make_mult_quad_dense(n, model, vars, order);
     end
 
     return quad_out;
 end
 
-function make_mult_quad_dense(model, vars, order)
+function make_mult_quad_dense(n, model, vars, order)
     #make_mult_quad_dense: create the multipliers associated with a single robust SOC constraint:
     #
     #[tau s\\ s I*tau] in SOS^(n+1) [A, B]. Each time index t has its own SOC constraint
@@ -92,9 +98,10 @@ function make_mult_quad_dense(model, vars, order)
 
 
 
+        blocksize = [len_gram];
         #add the constraints
 
-    return quad_mult(s, tau, Gram)
+    return quad_mult(vec(s), tau, Gram, blocksize)
 
 
 end
@@ -151,13 +158,14 @@ function make_mult_psd_dense(model, vars, order)
 
 end
 
-function make_mult_quad_sparse(model, vars, order)
+function make_mult_quad_sparse(n, model, vars, order)
     #make_mult_quad_sparse: create the multipliers associated with a single robust SOC constraint:
     #
     #[sum_i z_it, s_it; s_it, z_it] in SOS^2[A, B]. Each time index t has its own SOC constraint
     #    
     #
     #Input:
+    #   n:      number of dimensions of SOC constraint
     #   model:  JuMP model which is containing all constraints
     #   vars:   the variables A and B
     #   order:  the order of polynomials to be used (degree/2)
@@ -168,7 +176,6 @@ function make_mult_quad_sparse(model, vars, order)
     #   z:      vector of polynomials
 
     #generate all monomials
-    n = size(vars.A, 2)
     vars_flat = vec([vars.A vars.B]);
     mon = reverse(monomials(vars_flat, 0:order));
 
@@ -199,7 +206,7 @@ function make_mult_quad_sparse(model, vars, order)
         z[i] = mon'*Gram_z*mon;
         zcorner[i] = mon'*Gram_corner'*mon;
 
-        tau = tau + z[i];
+        tau = tau + z[i];        
     end
 
     #now iterate back through the corners and set the corners equal to the sum
@@ -210,7 +217,9 @@ function make_mult_quad_sparse(model, vars, order)
         @constraint(model, coefficients(tau - zcorner[i])==0);
     end
 
-    return quad_mult(s, tau, Gram)
+    blocksize = Int64.(ones(n, 1))*len_gram;
+
+    return quad_mult(vec(s), tau, Gram, blocksize)
 
 
 end
@@ -227,6 +236,8 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
 
     vars_flat = vec([vars.A vars.B]);
 
+    blocksize = [];
+
     #create the residual
     Xnext = data.X[:, 2:end];
     Xprev = data.X[:, 1:end-1];
@@ -236,41 +247,69 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
     #the contribution such that q==psatz_term
     psatz_term = 0;
 
-    #form mu (equality constraint multipliers)
-    mu = Array{Polynomial}(undef, n, T-1);
-    for k = 1:(T-1)
-        for j = 1:n
-            mucurr, mucurrc, mucurrb = add_poly!(model, vars_flat, 2*order-1);
-            mu[j, k] = mucurr;
-        end
-        # v, vc, vb = add_poly!(model, x, 2d)
-        # psatz_term = psatz_term + mu[:, k]'*h0[k];
-    end
-    psatz_term = sum(mu .* h0);
-
-    #form quad (the quadratic inequality constraints (s, tau))    
+    #form quad_x (quadratic inequality constraints for dx) 
     if data.epsilon[1] > 0
         quad_x = Array{quad_mult}(undef, T, 1);
         for k = 1:T        
-            quad_x[k] = make_mult_quad(model, vars, order, SPARSE);        
+            quad_x[k] = make_mult_quad(n, model, vars, order, SPARSE);  
+            blocksize = [blocksize; quad_x.blocksize];
         end
     else
         quad_x = zeros(T, 1);
     end
 
-    #form quad_u (quadratic inequality constraints for u)
+    #form quad_u (quadratic inequality constraints for du)
     if data.epsilon[2] > 0
         quad_u = Array{quad_mult}(undef, T-1, 1);
         for k = 1:T-1        
-            quad_u[k] = make_mult_quad(model, vars, order, SPARSE);        
+            quad_u[k] = make_mult_quad(m, model, vars, order, SPARSE);        
+            blocksize = [blocksize; quad_u.blocksize];
         end
     else
         quad_u = zeros(T-1, 1);
     end
+
+    
+    #form mu (process noise multipliers for w)
+    mu = Array{quad_mult}(undef, n, T-1);
+    if data.epsilon[3] > 0
+        #yes process noise    
+        for k = 1:(T-1)
+            mu[k] = make_mult_quad(n, model, vars, order-1, SPARSE);        
+            blocksize = [blocksize; mu[k].blocksize];
+            # v, vc, vb = add_poly!(model, x, 2d)        
+            psatz_term = psatz_term + sum(vec(mu[k].s).*h0[:, k]);
+            psatz_term = psatz_term + mu[k].tau*data.epsilon[3]; #check the sign, might be -tau
+        end
+        
+    else
+        #no process noise        
+        for k = 1:(T-1)
+            s_curr = Array{Polynomial}(undef, n, 1);
+            
+
+            # mu[k].tau = 0;
+            for j = 1:n
+                # mon = reverse(monomials(vars_flat, 0:(2:order-1)));
+                # coeff_curr = @variable(model, 1:n, [1:length(mon)])
+                # mu[k].s = coeff_curr'*mon;
+            
+
+                mucurr, mucurrc, mucurrb = add_poly!(model, vars_flat, 2*order-1);
+                s_curr[j] = mucurr;
+            end   
+            mu[k] = quad_mult(vec(s_curr), 0, [], []);         
+            psatz_term = psatz_term + sum(vec(s_curr).*h0[:, k]);
+            # v, vc, vb = add_poly!(model, x, 2d)
+            # psatz_term = psatz_term + mu[:, k]'*h0[k];
+        end
+        # psatz_term = sum(mu .* h0);
+    end
     
     #now iterate through the constraints (for x)
     s_sig_x = sqrt(data.Sigma[1]);
-    s_sig_u = sqrt(data.Sigma[1]);
+    s_sig_u = sqrt(data.Sigma[2]);
+    s_sig_w = sqrt(data.Sigma[3]); #TODO: figure out how s_sig_w enters
     for k = 1:T
         
         if data.epsilon[1] > 0
@@ -286,7 +325,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
 
         if (data.epsilon[2] > 0) & (k<= T-1)
             s_term_u = -s_sig_u \ quad_u[k].s;
-            mu_con_u = vars.B'*mu[:, k];
+            mu_con_u = vars.B'*mu[k].s;
 
             for j = 1:m
                 @constraint(model, coefficients.(s_term_u[j] - mu_con_u[j])==0);
@@ -297,23 +336,24 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
     end
 
     #seal up with the psatz constraint
-    model = add_psatz!(model, q-psatz_term, vars_flat, [], [],order);
+    model, info_seal = add_psatz!(model, q-psatz_term, vars_flat, [], [],order);
+    blocksize = [blocksize; info_seal.blocksize]
     # @constraint(model, coefficients)
     
     # quad_u = 0
-    return psatz(mu, quad_x, quad_u);
+    return psatz(mu, quad_x, quad_u, blocksize);
 end
 
 function mu_eq_con(T, k, mu, A)
     #the equality constraint involved in data-consistency
     #(assuming no process noise)
     #process noise will be added later
-    mu_con = 0*mu[:, 1];
+    mu_con = 0*mu[1].s;
     if k<=T-1
-        mu_con = mu_con + A'*mu[:, k];
+        mu_con = mu_con + A'*mu[k].s;
     end
     if k>=2
-        mu_con = mu_con - mu[:, k-1];
+        mu_con = mu_con - mu[k-1].s;
     end
     return mu_con;
 end
