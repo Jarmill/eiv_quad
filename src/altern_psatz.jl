@@ -278,8 +278,10 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
             mu[k] = make_mult_quad(n, model, vars, order-1, SPARSE);        
             blocksize = [blocksize; mu[k].blocksize];
             
-            psatz_term = psatz_term + sum(vec(mu[k].s).*h0[:, k]);
-            psatz_term = psatz_term + mu[k].tau*data.epsilon[3]; #check the sign, might be -tau
+            JuMP.add_to_expression!(psatz_term, sum(vec(mu[k].s).*h0[:, k]));
+            JuMP.add_to_expression!(psatz_term, mu[k].tau*data.epsilon[3]);
+            # psatz_term = psatz_term + sum(vec(mu[k].s).*h0[:, k]);
+            # psatz_term = psatz_term + mu[k].tau*data.epsilon[3]; #check the sign, might be -tau
         end
         
     else
@@ -300,7 +302,8 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
                 s_curr[j] = make_poly(model, vars_flat, 2*order-1);
             end   
             mu[k] = quad_mult(vec(s_curr), 0, [], []);         
-            psatz_term = psatz_term + sum(vec(s_curr).*h0[:, k]);
+            # psatz_term = psatz_term + sum(vec(s_curr).*h0[:, k]);
+            JuMP.add_to_expression!(psatz_term, sum(vec(s_curr).*h0[:, k]));
             # v, vc, vb = add_poly!(model, x, 2d)
             # psatz_term = psatz_term + mu[:, k]'*h0[k];
         end
@@ -320,8 +323,8 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
             for i=1:n
                 @constraint(model, coefficients(s_term_x[i] - mu_con_x[i])==0);
             end
-
-            psatz_term = psatz_term + quad_x[k].tau*data.epsilon[1];    
+            JuMP.add_to_expression!(psatz_term, quad_x[k].tau*data.epsilon[1]);
+            # psatz_term = psatz_term + quad_x[k].tau*data.epsilon[1];    
         end
 
         if (data.epsilon[2] > 0) & (k<= T-1)
@@ -331,7 +334,8 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
             for j = 1:m
                 @constraint(model, coefficients.(s_term_u[j] - mu_con_u[j])==0);
             end
-            psatz_term = psatz_term + quad_u[k].tau*data.epsilon[2];    
+            # psatz_term = psatz_term + quad_u[k].tau*data.epsilon[2];    
+            JuMP.add_to_expression!(psatz_term, quad_u[k].tau*data.epsilon[2]);
         end
                 
     end
@@ -346,7 +350,10 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
     Gram0 = JuMP.@variable(model, [1:len_gram, 1:len_gram], PSD);
     sigma0 = mon'*Gram0*mon;
 
-    @constraint(model, coefficients(q-psatz_term - sigma0)==0);
+    JuMP.add_to_expression!(psatz_term, sigma0);
+    
+
+    @constraint(model, coefficients(q-psatz_term)==0);
     # model, info_seal = add_psatz!(model, q-psatz_term, vars_flat, [], [],order);
     blocksize = [blocksize; len_gram]
     # @constraint(model, coefficients)

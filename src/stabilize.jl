@@ -3,10 +3,10 @@ struct output_ss
     status  #optimizing status
     K       #controller that performs superstabilization
     lambda  #superstabilizing gain bound
-
+    blocksize #psd block sizes involved
 end
 
-function ss_clean(sys, order, SPARSE=false)
+function ss_clean(sys)
     #perform clean (no-noise) superstabilization 
     #
     #minimize the superstabilizing bound lambda
@@ -93,15 +93,17 @@ function ss_quad(data, order, SPARSE=false)
     Acl = vs.A + vs.B*K;
     con_pos = vec(M - Acl);
     con_neg = vec(M + Acl);
-    con_lam = vec(lambda - sum(M, dims=2));
+    con_lam = vec(lambda .- sum(M, dims=2));
 
     con_all = [con_pos; con_neg; con_lam];
 
     num_con = length(con_all);
 
     ps = Array{psatz}(undef, num_con, 1);
+    blocksize = [];
     for k = 1:num_con
         ps[k] = quad_psatz(con_all[k], order, model, data, vs, SPARSE);
+        blocksize = [blocksize; ps[k].blocksize];
     end
         
 
@@ -126,7 +128,7 @@ function ss_quad(data, order, SPARSE=false)
         lam_rec = value(lambda);
     end    
 
-    output = output_ss(lam_rec, K_rec, status)
+    output = output_ss(lam_rec, K_rec, status, blocksize);
 
     #recover the solution, process the output
     # output =  slice_recover(model, vars, poly, order, opts, info);

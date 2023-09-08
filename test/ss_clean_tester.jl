@@ -7,8 +7,10 @@ using eiv_quad
 using JuMP
 using LinearAlgebra
 using Mosek
+# A = [0.6863    0.3968
+#     0.3456    1.0388];
 A = [0.6863    0.3968
-    0.3456    1.0388];
+    0.3456    0.2];
 B = [0.4170
     0.7203];
 
