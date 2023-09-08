@@ -17,4 +17,4 @@ vs = sys_vars(A, B)
 qm = make_mult_quad(n, model, vs, order, false);
 qms = make_mult_quad(n, model, vs, order, true);
 
-qms3 = make_mult_quad(3, model, vs, order, true);
+# qms3 = make_mult_quad(3, model, vs, order, true);

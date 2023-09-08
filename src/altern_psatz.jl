@@ -252,7 +252,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
         quad_x = Array{quad_mult}(undef, T, 1);
         for k = 1:T        
             quad_x[k] = make_mult_quad(n, model, vars, order, SPARSE);  
-            blocksize = [blocksize; quad_x.blocksize];
+            blocksize = [blocksize; quad_x[k].blocksize];
         end
     else
         quad_x = zeros(T, 1);
@@ -263,7 +263,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
         quad_u = Array{quad_mult}(undef, T-1, 1);
         for k = 1:T-1        
             quad_u[k] = make_mult_quad(m, model, vars, order, SPARSE);        
-            blocksize = [blocksize; quad_u.blocksize];
+            blocksize = [blocksize; quad_u[k].blocksize];
         end
     else
         quad_u = zeros(T-1, 1);
@@ -335,9 +335,19 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
                 
     end
 
-    #seal up with the psatz constraint
-    model, info_seal = add_psatz!(model, q-psatz_term, vars_flat, [], [],order);
-    blocksize = [blocksize; info_seal.blocksize]
+
+    #seal up with sigma0 (the psatz)
+    mon = reverse(monomials(vars_flat, 0:order));
+
+    #create the block Gram matrix
+    len_gram = length(mon);
+    #declare the PSD matrix variable 
+    Gram0 = JuMP.@variable(model, [1:len_gram, 1:len_gram], PSD);
+    sigma0 = mon'*Gram0*mon;
+
+    @constraint(model, coefficients(q-psatz_term - sigma0)==0);
+    # model, info_seal = add_psatz!(model, q-psatz_term, vars_flat, [], [],order);
+    blocksize = [blocksize; len_gram]
     # @constraint(model, coefficients)
     
     # quad_u = 0

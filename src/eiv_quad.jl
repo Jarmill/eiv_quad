@@ -12,9 +12,11 @@ sys_vars, make_mult_quad, quad_mult, quad_psatz, make_sys_vars
 
 greet() = print("Hello World!")
 
+include("make_vars.jl")
 include("helpers.jl")
 include("data_generate.jl")
 include("stabilize.jl")
 include("altern_psatz.jl")
+include("full_psatz.jl")
 
 end # module eiv_quad

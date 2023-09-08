@@ -1,32 +1,44 @@
-mutable struct sys_vars #store the polynomial variables
-    A
-    B
+#stabilize ()
+function quad_ss(data, order)
+
+    #create the optimizer
+    model = Model(optimizer_with_attributes(Mosek.Optimizer));
+
+
+        
+    #solve the SOS problem
+    optimize!(model)
+
+    #recover the solution, process the output
+    # output =  slice_recover(model, vars, poly, order, opts, info);
+
+    return output
 end
 
-mutable struct noise_vars #variables for noise processes (full only)
-    dx
-    du
-end
 
-function make_sys_vars(data)
-    #make_sys_vars: generate the system variables of the plant parameters A and B
-    n = size(data.X, 1);
-    m = size(data.U, 1);
+function slice_run(order, opts)
+    #slice_max: the main routine
+    #
+    #Inputs:
+    #   order:  the polynomial order of the slicing SOS programs
+    #   opts:   options (slice_interface.jl/slice_options)
+    #Outputs:
+    #   slice_out
 
-    @polyvar A[1:n, 1:n]
-    @polyvar B[1:n, 1:m] 
+    #create the optimizer
+    model = Model(optimizer_with_attributes(Mosek.Optimizer));
+
+    #create the variables and polynomials
+    vars = make_slice_vars(opts);
+    poly = make_slice_poly!(model, order, vars, opts);
+
+    #form the SOS program
+    info = slice_program!(model, order, poly, vars, opts)
+
+    #form the objective 
+    slice_obj = slice_objective!(model, poly, opts);        
     
-    return sys_vars(A, B)
-end
 
-function make_noise_vars(data)
-    n = size(data.X, 1);
-    m = size(data.U, 1);
-    T = size(data.X, 2);
-
-    @polyvar dx[1:n, 1:T];
-    @polyvar du[1:n, 1:(T-1)];
-
-    return noise_vars(dx, du);
-
+    #solve the SOS problem
+    optimize!(model)
 end
