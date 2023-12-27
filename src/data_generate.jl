@@ -30,7 +30,7 @@ function generate_data(sys, T, umax, epsilon, Sigma, rng, normal=false)
     # s_Sigma = sqrt.(Sigma);
 
     X = zeros(n, T);
-    X[:, 1] = rand!(rng, zeros(2, 1));
+    X[:, 1] = rand!(rng, zeros(n, 1));
 
     if normal        
         x_noise_base = randn!(rng, zeros(n, T));

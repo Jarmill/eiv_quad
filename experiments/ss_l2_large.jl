@@ -15,16 +15,30 @@ using LinearAlgebra
 rng = MersenneTwister(13);
 
 # 2nd order system
-A = [0.6863    0.3968
-    0.3456    1.0388];
-B = [0.4170    0.0001
-    0.7203    0.3023];
-n = 2;  m = 1;
+# A = [0.6863    0.3968
+#     0.3456    1.0388];
+# B = [0.4170    0.0001
+#     0.7203    0.3023];
+# n = 2;  m = 1;
 
+A = [1.3 -2.6 0.3 0
+     -1  -1.5  2  1
+     -0.5    -2.2    0.5  0.5
+     1    0.5    0  1.3];
+B = [1 0 1;
+0 -1 1;
+1 0 1;
+0 1 1]; 
+
+n=4;
+m=3;
 umax = 1;           # input bound
-T = 15;             # Time horizon
-R = 0.1;           # radius for sampling (works for R=0.5)
+# T = 15;             # Time horizon
+# R = 0.1;           # radius for sampling 
     
+R = 0.01;
+T = 20;
+
 model = Model();
 epsilon = [R; R; 0]
 sigma = [I, I, I];
@@ -40,11 +54,11 @@ order = 1;
 # ss_out_dense = ss_quad(data, order, false);
 
 ess_out_sparse = ess_quad(data, order, true);
-# ess_out_dense = ess_quad(data, order, false);
+# # ess_out_dense = ess_quad(data, order, false);
 
-#in this experiment, sparse succeeds and dense fails
+# #in this experiment, sparse succeeds and dense fails
 
 Acl_sparse = sys.A + sys.B*ss_out_sparse.K;
 
-eig_sparse = eigvals(Acl_sparse);
-lam_sparse = maximum(sum(Acl_sparse, dims=2));
+# eig_sparse = eigvals(Acl_sparse);
+# lam_sparse = maximum(sum(Acl_sparse, dims=2));
