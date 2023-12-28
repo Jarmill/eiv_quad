@@ -19,7 +19,7 @@ A = [0.6863    0.3968
     0.3456    1.0388];
 B = [0.4170    0.0001
     0.7203    0.3023];
-n = 2;  m = 1;
+n = 2;  m = 2;
 
 umax = 1;           # input bound
 T = 15;             # Time horizon
@@ -44,7 +44,7 @@ ess_out_sparse = ess_quad(data, order, true);
 
 #in this experiment, sparse succeeds and dense fails
 
-Acl_sparse = sys.A + sys.B*ss_out_sparse.K;
+Acl_sparse = sys.A + sys.B*ess_out_sparse.K;
 
 eig_sparse = eigvals(Acl_sparse);
 lam_sparse = maximum(sum(Acl_sparse, dims=2));

@@ -277,9 +277,8 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
         for k = 1:(T-1)
             mu[k] = make_mult_quad(n, model, vars, order-1, SPARSE);        
             blocksize = [blocksize; mu[k].blocksize];
-            
-            add_to_expression!(psatz_term, sum(vec(mu[k].s).*h0[:, k]));
-            add_to_expression!(psatz_term, mu[k].tau*data.epsilon[3]); #check the sign, might be -tau
+            psatz_term = psatz_term + sum(vec(mu[k].s).*h0[:, k]);
+            psatz_term = psatz_term + mu[k].tau*data.epsilon[3]; 
         end
         
     else
@@ -300,7 +299,8 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
                 s_curr[j] = make_poly(model, vars_flat, 2*order-1);
             end   
             mu[k] = quad_mult(vec(s_curr), 0, [], []);         
-            add_to_expression!(psatz_term, sum(vec(s_curr).*h0[:, k]));
+            psatz_term = psatz_term + sum(vec(s_curr).*h0[:, k]);
+         
             # v, vc, vb = add_poly!(model, x, 2d)
             # psatz_term = psatz_term + mu[:, k]'*h0[k];
         end
@@ -321,7 +321,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
                 @constraint(model, coefficients(s_term_x[i] - mu_con_x[i])==0);
             end
 
-            add_to_expression!(psatz_term, quad_x[k].tau*data.epsilon[1]);    
+            psatz_term = psatz_term + quad_x[k].tau*data.epsilon[1]; 
         end
 
         if (data.epsilon[2] > 0) & (k<= T-1)
@@ -331,7 +331,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
             for j = 1:m
                 @constraint(model, coefficients.(s_term_u[j] - mu_con_u[j])==0);
             end
-            add_to_expression!(psatz_term, quad_u[k].tau*data.epsilon[2]);    
+            psatz_term = psatz_term + quad_u[k].tau*data.epsilon[2];   
         end
                 
     end
