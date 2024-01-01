@@ -8,15 +8,23 @@ using JuMP
 using LinearAlgebra
 using Mosek
 
-A = [1.3 -2.6 0.3 0
-     -1  -1.5  2  1
-     -0.5    -2.2    0.5  0.5
-     1    0.5    0  1.3];
+# A = [1.3 -2.6 0.3 0
+#      -1  -1.5  2  1
+#      -0.5    -2.2    0.5  0.5
+#      1    0.5    0  1.3];
 
-B = [1 0 1;
-0 -1 1;
-1 0 1;
-0 1 1];  
+# B = [1 0 1;
+# 0 -1 1;
+# 1 0 1;
+# 0 1 1];  
+
+A = [1.3 -2.6 0.3 
+     -1  -1.5  2  
+     -0.5    -2.2    0.5];
+
+B = [1 1;
+0 1;
+0 1];  
 
 # B = [1 0 0;
 #      0 -1 0;
@@ -60,6 +68,7 @@ con_all = [con_pos; con_neg; con_lam; con_v];
 
 @constraint(model, con_all >= 0);
 @constraint(model, sum(v)==1);
+# @constraint(model, v.==1);
 
 
 #impose the objective 

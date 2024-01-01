@@ -252,6 +252,7 @@ function ess_quad(data, order, SPARSE=false)
     con_neg = vec(M + Acl);
     # con_lam = vec(lambda .- sum(M, dims=2));
     con_lam  = vec(lambda .- v);
+    con_lam_eta = vec(v .- eta);
     con_v = vec(v .- sum(M, dims=2) .- eta);
 
 
@@ -260,6 +261,7 @@ function ess_quad(data, order, SPARSE=false)
     # finite-dimensional constraints
     @constraint(model, sum(v)==1);
     @constraint(model, con_lam >= 0);
+    @constraint(model, con_lam_eta >= 0);
 
     #SOS constraints
     num_con = length(con_all);
