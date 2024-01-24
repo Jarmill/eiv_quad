@@ -1,11 +1,16 @@
-#altern_psatz.jl
+#full_psatz.jl
 #certify that a polynomial q(A, B) is nonnegative over the L2-specified consistency set
 #include all possible system and noise variables (A, B, dx, du), very expensive
 
-function full_psatz(q, order, model, data, s_vars, n_vars)
+mutable struct full_mult
+    q         #nonnegative expression
+    blocksize #size of the Gram matrices
+end
+
+function full_psatz(q, order, model, data, vars, n_vars)
     #certify that q>=0
 
-    sys_vars_flat = vec([s_vars.A s_vars.B]);
+    sys_vars_flat = vec([vars.A vars.B]);
     
     #handle the dx entries
     if data.epsilon[1]>0
@@ -14,19 +19,19 @@ function full_psatz(q, order, model, data, s_vars, n_vars)
         dx_con = vec(data.epsilon[1]^2 .-sum(dx.^2, dims=1)); 
     else
         dx = n_vars.dx*0;
-        dx_flat = [];
-        dx_con = [];
+        dx_flat = zeros(0);
+        dx_con = zeros(0);
     end
 
     #handle the du entries
     if data.epsilon[2]>0
-        du = n_vars.du*0;
+        du = n_vars.du;
         du_flat = vec(n_vars.du);
-        du_con = vec(data.epsilon[1]^2 .-sum(n_vars.dx.^2, dims=1));
+        du_con = vec(data.epsilon[1]^2 .-sum(n_vars.du.^2, dims=1));
     else
         du = n_vars.du*0;
-        du_flat = [];
-        du_con = [];
+        du_flat = zeros(0);
+        du_con = zeros(0);
     end
 
 
@@ -42,14 +47,17 @@ function full_psatz(q, order, model, data, s_vars, n_vars)
     Xnext = data.X[:, 2:end];
     Xprev = data.X[:, 1:end-1];
     U = data.U[:, 1:end-1];
-    h = Xnext - vars.A*(Xprev+dx) - vars.B*(U+du);
+    dxprev = dx[:, 1:end-1];
+    h = Xnext - vars.A*(Xprev+dxprev) - vars.B*(U+du);
 
+    h_con = vec(h);
     #process noise constraints
+    
     if data.epsilon[3]>0
         w_con = vec(data.epsilon[3]^2 .-sum(h.^2, dims=1)); 
-        eq_con = [];
+        eq_con = zeros(0);
     else
-        w_con = [];
+        w_con = zeros(0);
         eq_con = vec(h);
     end
 
@@ -61,10 +69,7 @@ function full_psatz(q, order, model, data, s_vars, n_vars)
 
     model = add_psatz!(model, q, vars_flat_all, ineq_con, eq_con, order);
 
-
-
-
-
-
-
+    nvars = n*(T+n) + m*(n+T-1);
+    blocksize_max = binomial(nvars+order, order)
+    return full_mult(q, blocksize_max)
 end

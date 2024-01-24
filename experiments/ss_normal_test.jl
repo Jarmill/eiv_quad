@@ -59,13 +59,13 @@ vs = make_sys_vars(data);
 order = 1;
 
 # ss_out_sparse = ss_quad(data_chi, order, true);
-ss_out_dense = ss_quad(data, order, false);
+# ss_out_dense = ss_quad(data, order, false);
+ss_out_full = ss_quad_full(data, order);
 
 #in this experiment, sparse succeeds and dense fails
-if ss_out_sparse.status
-    Acl_sparse = sys.A + sys.B*ss_out_sparse.K;
+# if ss_out_sparse.status
+#     Acl_sparse = sys.A + sys.B*ss_out_sparse.K;
 
-    eig_sparse = eigvals(Acl_sparse);
-    lam_sparse = maximum(sum(Acl_sparse, dims=2));
-
-end
+#     eig_sparse = eigvals(Acl_sparse);
+#     lam_sparse = maximum(sum(Acl_sparse, dims=2));
+# end
