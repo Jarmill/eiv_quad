@@ -81,7 +81,7 @@ function make_mult_quad_dense(n, model, vars, order)
         nv = length(mon);
 
         # @constraint(model, Gram_curr >= 0, PSDCone());
-        for i = 1:n
+        for i = 2:n
             for j=i:n
                 Zeta_curr = Zeta[i, j];                
                 # zeta_coeff = coefficients(Zeta_curr);
