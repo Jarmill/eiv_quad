@@ -4,8 +4,8 @@
 #the noise has a normal distribution
 #
 #safety probability 90%
-#true lambda: 0.7329679715748868
-#worst-case lambda: 0.997191322841913
+#true lambda: 0.7329679715748868 (sparse)
+#worst-case lambda: 0.997191322841913 (sparse)
 #
 #
 
