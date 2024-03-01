@@ -28,9 +28,13 @@ m = size(B, 2);
 
 umax = 1;           # input bound
 T = 14;             # Time horizon
-Rx = 0.02;           # radius for sampling (works for R=0.5)
-Ru = 0.02;           # radius for sampling (works for R=0.5)
-    
+# Rx = 0.02;           # radius for sampling (works for R=0.02)
+# Ru = 0.02;           # radius for sampling (works for R=0.02)
+
+Rx = 0.04;           # radius for sampling (works for R=0.5)
+Ru = 0.03;           # radius for sampling (works for R=0.5)
+
+
 model = Model();
 #standard deviations of noise process
 epsilon = [Rx; Ru; 0]
@@ -40,7 +44,7 @@ data = generate_data(sys, T, umax, epsilon, sigma, rng, true);
 
 #quantile for chi square, (sum of squares, so need to square Rx and Ru)
 # safe scheme by Lemma 5 of https://arxiv.org/pdf/2211.05639.pdf
-P_safe = 0.9;
+P_safe = 0.95;
 P_error_unit = P_safe^(1/(2*T-1));
 chi_quantile_x = Rx*sqrt(chisqinvcdf(n, P_error_unit));
 chi_quantile_u = Ru*sqrt(chisqinvcdf(m, P_error_unit));
@@ -58,8 +62,12 @@ vs = make_sys_vars(data);
 
 order = 1;
 
-# ss_out_sparse = ss_quad(data_chi, order, true);
-ss_out_dense = ss_quad(data, order, false);
+ss_out_sparse = ss_quad(data_chi, order, true);
+# ss_out_dense = ss_quad(data_chi, order, false);
+
+K_rec = ss_out_dense.K;
+Acl_rec = A + B*K_rec;
+e_rec = abs.(eigvals(Acl_rec))
 # ss_out_full = ss_quad_full(data, order);
 
 #in this experiment, sparse succeeds and dense fails
