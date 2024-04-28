@@ -65,7 +65,7 @@ block_term = block_control - block_diag_embed
 @constraint(model, tau >= 0)
 @constraint(model, P - tol*I >= 0, PSDCone())
 @constraint(model, -block_term -tol*I>= 0, PSDCone())
-@constraint(model, sum(diag(P)) == 1)
+# @constraint(model, sum(diag(P)) == 1)
 
 @objective(model, Min, 0)
 
