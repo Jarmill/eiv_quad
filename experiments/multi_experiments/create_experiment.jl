@@ -30,6 +30,9 @@ system_test = Array{system}(undef, N_experiments, 1);
 data_test = Array{struct_data}(undef, N_experiments, 1);
 
 
+# order = 1;
+order = 2;
+
 for i = 1:N_experiments
 
     A = randn!(rng, zeros(n, n))*M;
@@ -41,8 +44,6 @@ for i = 1:N_experiments
     system_test[i] = sys;
 
 
-
-    order = 1;
 
     out_ss_dense[i] = ss_quad(data, order, false);
 
