@@ -232,7 +232,7 @@ function ess_clean(sys)
 
     #get the data properties and form variables
     n = size(sys.A, 1);
-    m = size(sys.B, 1);
+    m = size(sys.B, 2);
 
     #form the design variables
     lambda = JuMP.@variable(model);
