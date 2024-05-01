@@ -53,8 +53,9 @@ vs = make_sys_vars(data);
 order = 1;
 
 # ss_out_sparse = ss_quad(data, order, true);
-# ss_out_dense = ss_quad(data, order, false);
-ss_out_full = ss_full(data, order);
+ss_out_dense = ss_quad(data, order, false);
+ess_out_dense = ess_quad(data, order, false);
+# ss_out_full = ss_full(data, order);
 
 # ess_out_sparse = ess_quad(data, order, true);
 # # ess_out_dense = ess_quad(data, order, false);

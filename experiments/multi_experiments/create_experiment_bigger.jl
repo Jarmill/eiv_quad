@@ -8,24 +8,25 @@ rng = MersenneTwister(135);
 
 
 
-n = 2;
+n = 3;
 m = 2;
 
 M = 1;
-Rx = 0.04;           # radius for sampling (works for R=0.5)
-Ru = 0.03;           # radius for sampling (works for R=0.5)
+Rx = 0.1;           # radius for sampling
+Ru = 0.1;           # radius for sampling
 
 umax = 1;           # input bound
-T = 14;             # Time horizon
+# T = 14;             # Time horizon
+T = 20;
 
 #standard deviations of noise process
 epsilon = [Rx; Ru; 0]
 sigma = [I, I, I];
 
 
-N_experiments = 100;
-# N_experiments = 5;
-# out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
+# N_experiments = 100;
+N_experiments = 5;
+out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
 out_ess_dense = Array{output_ess}(undef, N_experiments, 1);
 out_qmi = Array{output_qmi}(undef, N_experiments, 1);
 system_test = Array{system}(undef, N_experiments, 1);

@@ -12,8 +12,8 @@ n = 2;
 m = 2;
 
 M = 1;
-Rx = 0.04;           # radius for sampling (works for R=0.5)
-Ru = 0.03;           # radius for sampling (works for R=0.5)
+Rx = 0.2;           # radius for sampling (works for R=0.5)
+Ru = 0.1;           # radius for sampling (works for R=0.5)
 
 umax = 1;           # input bound
 T = 14;             # Time horizon
@@ -23,9 +23,9 @@ epsilon = [Rx; Ru; 0]
 sigma = [I, I, I];
 
 
-N_experiments = 100;
+N_experiments = 5;
 # N_experiments = 5;
-# out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
+out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
 out_ess_dense = Array{output_ess}(undef, N_experiments, 1);
 out_qmi = Array{output_qmi}(undef, N_experiments, 1);
 system_test = Array{system}(undef, N_experiments, 1);
