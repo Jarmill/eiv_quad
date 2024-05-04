@@ -8,8 +8,8 @@ using Mosek
 
 
 #get the data from the ss_normal_test.jl experiment
-stored = load("experiments/ss_normal.jld")
-data = stored["data_chi"]
+# stored = load("experiments/ss_normal.jld")
+# data = stored["data_chi"]
 
 A = [0.6863    0.3968
     0.3456    1.0388];

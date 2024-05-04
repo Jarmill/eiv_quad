@@ -3,7 +3,7 @@
 #use a theorem of alternatives to get a simpler program
 
 mutable struct psatz
-    mu      #equality constrained multipliers
+    mu      #dynamics constrained multipliers
     quad_x  #x: polynomials (s, tau) from quad_mult    
     quad_u  #u: polynomials (s, tau) from quad_mult   
     blocksize #sizes of PSD matrices involved in the constraint 

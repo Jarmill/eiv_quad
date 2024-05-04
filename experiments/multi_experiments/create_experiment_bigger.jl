@@ -23,8 +23,8 @@ epsilon = [Rx; Ru; 0]
 sigma = [I, I, I];
 
 
-N_experiments = 200;
-# N_experiments = 5;
+# N_experiments = 200;
+N_experiments = 5;
 out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
 out_ess_dense = Array{output_ess}(undef, N_experiments, 1);
 out_qmi = Array{output_qmi}(undef, N_experiments, 1);

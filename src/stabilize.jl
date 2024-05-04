@@ -58,11 +58,11 @@ function ss_clean(sys)
         lam_rec = Inf;
         K_rec = [];
     else
-        K_rec = value(K);
+        K_rec = value.(K);
         lam_rec = value(lambda);
     end    
 
-    output = output_ss(lam_rec, K_rec, status)
+    output = output_ss(lam_rec, K_rec, status, [])
 
     #recover the solution, process the output
     # output =  slice_recover(model, vars, poly, order, opts, info);
@@ -243,19 +243,28 @@ function ess_clean(sys)
 
     X = diagm(vec(v));
 
-    eta = 1e-4;
+    eta = 1e-2;
 
     #create the constraints
     Acl = sys.A*X + sys.B*S;
     con_pos = vec(M - Acl);
     con_neg = vec(M + Acl);
+    
+    #TODO: CHANGE THIS BACK TO ESS!
+    # con_lam = vec(lambda .- sum(M, dims=2));
+    # con_v  = vec(lambda .- v);
+    
+    #THE ESS STUFF:
     con_lam  = vec(lambda .- v);
-    con_v = vec(v .- sum(M, dims=2) .- eta);
+    # con_v = vec(v .- sum(M, dims=2) .- eta);
+    con_v = vec((1-eta)*v .- sum(M, dims=2));
+    con_v_eta = vec(v .- eta);
+    
 
-    con_all = [con_pos; con_neg; con_lam; con_v];
+    con_all = [con_pos; con_neg; con_lam; con_v; con_v_eta];
 
     @constraint(model, con_all >= 0);
-    @constraint(model, sum(v)==1);
+    @constraint(model, sum(v)==2);
 
     #impose the objective 
 
@@ -280,7 +289,7 @@ function ess_clean(sys)
         S_rec = value.(S);
         Xi_rec = diagm(1 ./ v_rec);
         K_rec = S_rec*Xi_rec;
-        lam_rec = value(lambda);
+        lam_rec = value(lambda);        
     end    
 
     output = output_ess(status, K_rec, v_rec, S_rec, status)
@@ -312,7 +321,7 @@ function ess_quad(data, order, SPARSE=false)
 
     X = diagm(vec(v));
 
-    eta = 1e-4;
+    eta = 1e-2;
 
     M = Array{Polynomial}(undef, n, n);
     for i = 1:n
@@ -330,13 +339,14 @@ function ess_quad(data, order, SPARSE=false)
     # con_lam = vec(lambda .- sum(M, dims=2));
     con_lam  = vec(lambda .- v);
     con_lam_eta = vec(v .- eta);
-    con_v = vec(v .- sum(M, dims=2) .- eta);
+    con_v = vec((1-eta)*v .- sum(M, dims=2) .- eta);
 
 
     con_all = [con_pos; con_neg; con_v];
  
     # finite-dimensional constraints
-    @constraint(model, sum(v)==1);
+    # @constraint(model, sum(v)==1);
+    @constraint(model, sum(v)==2);
     @constraint(model, con_lam >= 0);
     @constraint(model, con_lam_eta >= 0);
 

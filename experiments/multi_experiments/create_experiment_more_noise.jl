@@ -4,6 +4,7 @@ using Random
 using JuMP
 using LinearAlgebra
 using StatsFuns
+using JLD
 rng = MersenneTwister(135);
 
 
@@ -23,9 +24,12 @@ epsilon = [Rx; Ru; 0]
 sigma = [I, I, I];
 
 
-N_experiments = 200;
-# N_experiments = 5;
+N_experiments = 300;
+# N_experiments = 2;
+out_ss_sparse = Array{output_ss}(undef, N_experiments, 1);
 out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
+# out_ss_full = Array{output_ss}(undef, N_experiments, 1);
+out_ess_sparse = Array{output_ess}(undef, N_experiments, 1);
 out_ess_dense = Array{output_ess}(undef, N_experiments, 1);
 out_qmi = Array{output_qmi}(undef, N_experiments, 1);
 system_test = Array{system}(undef, N_experiments, 1);
@@ -48,8 +52,9 @@ for i = 1:N_experiments
 
 
     out_ss_dense[i] = ss_quad(data, order, false);
+    out_ss_sparse[i] = ss_quad(data, order, true);
     out_ess_dense[i] = ess_quad(data, order, false);
-
+    out_ess_sparse[i] = ess_quad(data, order, true);
     # K_rec = out_ss_dense[i].K;
     # Acl_rec = A + B*K_rec;
     # e_rec = abs.(eigvals(Acl_rec))
@@ -61,5 +66,10 @@ end
 
 
 report_qmi = [out_qmi[i].status==MOI.OPTIMAL for i in 1:N_experiments]'
-report_ss  = [out_ss_dense[i].status==true for i in 1:N_experiments]'
+report_ss  = [(out_ss_dense[i].status==true ) && (out_ss_sparse[i].lambda < 1) for i in 1:N_experiments]'
+report_ss_sparse  = [(out_ss_sparse[i].status==true) && (out_ss_sparse[i].lambda < 1) for i in 1:N_experiments]'
 report_ess  = [out_ess_dense[i].status==true for i in 1:N_experiments]'
+report_ess_sparse  = [out_ess_sparse[i].status==true for i in 1:N_experiments]'
+save("./experiments/multi_experiments/report_ess_more_noise_dense_sparse.jld", "report_qmi", report_qmi, "report_ess", report_ess, "report_ess_sparse",
+       report_ess_sparse, "report_ss_sparse", report_ss_sparse, "report_ss", report_ss,  "out_qmi", out_qmi, "out_ess_dense", out_ess_dense,
+         "out_ss_dense", out_ss_dense, "out_ss_sparse", out_ss_sparse, "data_test", data_test, "system_test", system_test, "order", order)

@@ -63,11 +63,11 @@ vs = make_sys_vars(data);
 order = 1;
 
 # @btime ess_out_sparse = ss_quad(data_chi, order, true);
-# @btime ss_out_sparse = ss_quad(data_chi, order+1, true);
-ss_out_dense = ess_quad(data_chi, order, false);
-# @btime ss_out_full = ss_quad_full(data, order);
+# @btime ess_out_sparse = ss_quad(data_chi, order+1, true);
+ess_out_dense = ess_quad(data_chi, order, false);
+# @btime ess_out_full = ss_quad_full(data, order);
 # K_rec = ss_out_dense.K;
-K_rec = ess_out_sparse.K;
+K_rec = ess_out_dense.K;
 Acl_rec = A + B*K_rec;
 e_rec = abs.(eigvals(Acl_rec))
 # @btime ss_out_full = ss_quad_full(data, order);
