@@ -314,7 +314,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
     for k = 1:T
         
         if data.epsilon[1] > 0
-            s_term_x = -s_sig_x \ quad_x[k].s;
+            s_term_x = s_sig_x \ quad_x[k].s;
             mu_con_x = mu_eq_con(T, k, mu, vars.A);
 
             for i=1:n
@@ -325,7 +325,7 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
         end
 
         if (data.epsilon[2] > 0) & (k<= T-1)
-            s_term_u = -s_sig_u \ quad_u[k].s;
+            s_term_u = s_sig_u \ quad_u[k].s;
             mu_con_u = vars.B'*mu[k].s;
 
             for j = 1:m
