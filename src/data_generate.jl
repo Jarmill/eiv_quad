@@ -56,7 +56,6 @@ function generate_data(sys, T, umax, epsilon, Sigma, rng, normal=false)
     X_noise = X + x_noise;
     U_noise = U + u_noise;
 
-    return struct_data(X_noise, U_noise, Sigma, epsilon, 1e-6)
-    # , struct_data(X, U, Sigma, epsilon, 1e-6);
+    return struct_data(X_noise, U_noise, Sigma, epsilon, 1e-6), struct_data(X, U, Sigma, epsilon, 1e-6);
 
 end

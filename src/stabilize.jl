@@ -14,6 +14,7 @@ struct output_ess
     blocksize #psd block sizes involved
 end
 
+
 function ss_clean(sys)
     #perform clean (no-noise) superstabilization 
     #
@@ -321,7 +322,7 @@ function ess_quad(data, order, SPARSE=false)
 
     X = diagm(vec(v));
 
-    eta = 1e-2;
+    eta = 1e-3;
 
     M = Array{Polynomial}(undef, n, n);
     for i = 1:n
@@ -336,19 +337,29 @@ function ess_quad(data, order, SPARSE=false)
     Acl = vs.A*X + vs.B*S;
     con_pos = vec(M - Acl);
     con_neg = vec(M + Acl);
-    # con_lam = vec(lambda .- sum(M, dims=2));
-    con_lam  = vec(lambda .- v);
-    con_lam_eta = vec(v .- eta);
     con_v = vec((1-eta)*v .- sum(M, dims=2) .- eta);
 
+    #TODO: CONVERT BACK TO ESS
+    con_lam  = vec(lambda .- v);
+    con_lam_eta = vec(v .- eta);
+    
+
+    # con_lam = 2;
+    # con_lam_eta = 2;
+    # con_v = vec(lambda .- sum(M, dims=2));
+    # @constraint(model, v.==2*ones(2, 1));
+    #BACK TO NORMAL
 
     con_all = [con_pos; con_neg; con_v];
  
     # finite-dimensional constraints
-    # @constraint(model, sum(v)==1);
-    @constraint(model, sum(v)==2);
+    @constraint(model, sum(v)==1);
+    # @constraint(model, sum(v)==2);
     @constraint(model, con_lam >= 0);
     @constraint(model, con_lam_eta >= 0);
+
+    #TODO: For testing only
+    # @constraint(model, v.==0.5);
 
     #SOS constraints
     num_con = length(con_all);
@@ -372,7 +383,8 @@ function ess_quad(data, order, SPARSE=false)
     objv = objective_value(model);  
     status = termination_status(model)
 
-    status_opt = (status==MOI.OPTIMAL) || (status == SLOW_PROGRESS);
+    # status_opt = (status==MOI.OPTIMAL) || (status == SLOW_PROGRESS);
+    status_opt = (status==MOI.OPTIMAL);
     if !status_opt
         println("termination status: $status")
         status = primal_status(model)

@@ -40,7 +40,7 @@ model = Model();
 epsilon = [Rx; Ru; 0]
 sigma = [I, I, I];
 sys = system(A, B);
-data = generate_data(sys, T, umax, epsilon, sigma, rng, true);
+data, data_true = generate_data(sys, T, umax, epsilon, sigma, rng, true);
 
 #quantile for chi square, (sum of squares, so need to square Rx and Ru)
 # safe scheme by Lemma 5 of https://arxiv.org/pdf/2211.05639.pdf
