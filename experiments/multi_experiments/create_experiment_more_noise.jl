@@ -14,7 +14,7 @@ m = 2;
 
 M = 1;
 Rx = 0.5;           # radius for sampling (works for R=0.5)
-Ru = 0.25;           # radius for sampling (works for R=0.5)
+Ru = 0.2;           # radius for sampling (works for R=0.5)
 
 umax = 1;           # input bound
 T = 14;             # Time horizon
@@ -25,7 +25,7 @@ sigma = [I, I, I];
 
 
 # N_experiments = 300;
-N_experiments = 10;
+N_experiments = 1;
 out_ss_sparse = Array{output_ss}(undef, N_experiments, 1);
 out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
 # out_ss_full = Array{output_ss}(undef, N_experiments, 1);
@@ -73,7 +73,7 @@ report_ess  = [out_ess_dense[i].status==true for i in 1:N_experiments]'
 report_ess_sparse  = [out_ess_sparse[i].status==true for i in 1:N_experiments]'
 
 eig_ess_dense = [out_ess_dense[i].status ? abs.(eigvals(system_test[i].A + system_test[i].B*out_ess_dense[i].K)) : NaN  for i in 1:N_experiments]
-save("./experiments/multi_experiments/report_ess_more_noise_dense_sparse.jld", "report_qmi", report_qmi, "report_ess", report_ess, "report_ess_sparse",
-       report_ess_sparse, "report_ss_sparse", report_ss_sparse, "report_ss", report_ss,  "out_qmi", out_qmi, "out_ess_dense", out_ess_dense,
-         "out_ss_dense", out_ss_dense, "out_ss_sparse", out_ss_sparse, "data_test", data_test, "system_test", system_test, "order", order, 
-         "eig_ess_dense", eig_ess_dense)
+# save("./experiments/multi_experiments/report_ess_more_noise_dense_sparse.jld", "report_qmi", report_qmi, "report_ess", report_ess, "report_ess_sparse",
+#        report_ess_sparse, "report_ss_sparse", report_ss_sparse, "report_ss", report_ss,  "out_qmi", out_qmi, "out_ess_dense", out_ess_dense,
+#          "out_ss_dense", out_ss_dense, "out_ss_sparse", out_ss_sparse, "data_test", data_test, "system_test", system_test, "order", order, 
+#          "eig_ess_dense", eig_ess_dense)

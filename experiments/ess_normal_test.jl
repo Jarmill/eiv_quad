@@ -40,7 +40,7 @@ model = Model();
 epsilon = [Rx; Ru; 0]
 sigma = [I, I, I];
 sys = system(A, B);
-data = generate_data(sys, T, umax, epsilon, sigma, rng, true);
+data, data_true = generate_data(sys, T, umax, epsilon, sigma, rng, true);
 
 #quantile for chi square, (sum of squares, so need to square Rx and Ru)
 # safe scheme by Lemma 5 of https://arxiv.org/pdf/2211.05639.pdf
@@ -64,10 +64,11 @@ order = 1;
 
 # @btime ess_out_sparse = ss_quad(data_chi, order, true);
 # @btime ess_out_sparse = ss_quad(data_chi, order+1, true);
-ess_out_dense = ess_quad(data_chi, order, false);
+# ess_out_dense = ess_quad(data_chi, order, false);
+ss_out_dense = ss_quad(data_chi, order, false);
 # @btime ess_out_full = ss_quad_full(data, order);
 # K_rec = ss_out_dense.K;
-K_rec = ess_out_dense.K;
+K_rec = ss_out_dense.K;
 Acl_rec = A + B*K_rec;
 e_rec = abs.(eigvals(Acl_rec))
 # @btime ss_out_full = ss_quad_full(data, order);

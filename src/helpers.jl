@@ -43,3 +43,19 @@ function make_poly(model, vars, degree)
     coeff = @variable(model, [1:length(mon)])
     return coeff'*mon    
 end
+
+function poly_recover(v)
+    #POLY_RECOVER after solving an optimization problem, recover the polynomials that define the solution
+    # [multi-index]->real number (moment)
+
+    mon = monomials(v)
+
+    coe = coefficients(v)
+
+    coe_value = value.(coe);
+
+    v_sub = coe_value'*mon;
+
+
+    return v_sub
+end

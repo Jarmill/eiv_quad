@@ -12,6 +12,8 @@ struct output_ess
     v       #Lyapunov vector
     S       #control-adjusted matrix
     blocksize #psd block sizes involved
+    vs  #monomials for system matrices
+    M   #recovered M function
 end
 
 
@@ -113,6 +115,9 @@ function ss_quad(data, order, SPARSE=false)
         ps[k] = quad_psatz(con_all[k], order, model, data, vs, SPARSE);
         blocksize = [blocksize; ps[k].blocksize];
     end
+
+    @constraint(model, lambda >= 0);
+
         
 
     #impose the objective 
@@ -193,6 +198,7 @@ function ss_quad_full(data, order)
         
 
     #impose the objective 
+    @constraint(model, lambda >= 0);
 
     @objective(model, Min, lambda)
 
@@ -265,7 +271,8 @@ function ess_clean(sys)
     con_all = [con_pos; con_neg; con_lam; con_v; con_v_eta];
 
     @constraint(model, con_all >= 0);
-    @constraint(model, sum(v)==2);
+    @constraint(model, sum(v)==n);
+    
 
     #impose the objective 
 
@@ -293,7 +300,7 @@ function ess_clean(sys)
         lam_rec = value(lambda);        
     end    
 
-    output = output_ess(status, K_rec, v_rec, S_rec, status)
+    output = output_ess(status, K_rec, v_rec, S_rec, status, [], value.(M))
 
     #recover the solution, process the output
     # output =  slice_recover(model, vars, poly, order, opts, info);
@@ -322,7 +329,7 @@ function ess_quad(data, order, SPARSE=false)
 
     X = diagm(vec(v));
 
-    eta = 1e-3;
+    eta = 1e-2;
 
     M = Array{Polynomial}(undef, n, n);
     for i = 1:n
@@ -333,19 +340,28 @@ function ess_quad(data, order, SPARSE=false)
 
     #create the constraints
 
-    # Acl = vs.A + vs.B*K;
+    
     Acl = vs.A*X + vs.B*S;
+    
+
+    #from SS
+    # K = S;
+    # Acl = vs.A + vs.B*K;
+    # con_pos = vec(M - Acl);
+    # con_neg = vec(M + Acl);
+    # con_v = vec(lambda .- sum(M, dims=2));
+
+
     con_pos = vec(M - Acl);
     con_neg = vec(M + Acl);
     con_v = vec((1-eta)*v .- sum(M, dims=2) .- eta);
-
+    
     #TODO: CONVERT BACK TO ESS
     con_lam  = vec(lambda .- v);
+    # con_lam  = vec(lambda);
+    # con_lam  = lambda;
     con_lam_eta = vec(v .- eta);
     
-
-    # con_lam = 2;
-    # con_lam_eta = 2;
     # con_v = vec(lambda .- sum(M, dims=2));
     # @constraint(model, v.==2*ones(2, 1));
     #BACK TO NORMAL
@@ -353,12 +369,16 @@ function ess_quad(data, order, SPARSE=false)
     con_all = [con_pos; con_neg; con_v];
  
     # finite-dimensional constraints
-    @constraint(model, sum(v)==1);
+    @constraint(model, sum(v)==n);
     # @constraint(model, sum(v)==2);
-    @constraint(model, con_lam >= 0);
+    # @constraint(model, con_lam >= 0);
+    @constraint(model, lambda >= 0);
     @constraint(model, con_lam_eta >= 0);
 
+
+    
     #TODO: For testing only
+    # @constraint(model, v.==1);
     # @constraint(model, v.==0.5);
 
     #SOS constraints
@@ -393,15 +413,24 @@ function ess_quad(data, order, SPARSE=false)
         K_rec = [];
         S_rec = [];
         v_rec = [];
+        vs_rec = [];
+        M_rec = [];
     else
         v_rec = value.(v);
         S_rec = value.(S);
         Xi_rec = diagm(1 ./ v_rec);
         K_rec = S_rec*Xi_rec;
         lam_rec = value(lambda);
+        vs_rec = vs;
+        M_rec = M;
+        for i=1:n
+            for j=1:n
+                M_rec[i, j] = value.(coefficients(M[i, j]))'*monomials(M[i, j])
+            end
+        end
     end    
 
-    output = output_ess(status_opt, K_rec, v_rec, S_rec, status)
+    output = output_ess(status_opt, K_rec, v_rec, S_rec, status, vs_rec, M_rec)
 
     #recover the solution, process the output
     # output =  slice_recover(model, vars, poly, order, opts, info);
