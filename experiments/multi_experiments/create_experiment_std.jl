@@ -13,8 +13,9 @@ n = 2;
 m = 2;
 
 M = 1;
-Rx = 0.1;           # radius for sampling (works for R=0.5)
-Ru = 0.05;           # radius for sampling (works for R=0.5)
+#0.2: 5/10 for ESS, 2/10 for SS, 4/10 for QMI
+Rx = 0.25;           # radius for sampling (works for R=0.5)
+Ru = 0.1;           # radius for sampling (works for R=0.5)
 
 umax = 1;           # input bound
 T = 14;             # Time horizon
@@ -45,7 +46,7 @@ for i = 1:N_experiments
     B = randn!(rng, zeros(n, m))*M;
 
     sys = system(A, B);
-    data = generate_data(sys, T, umax, epsilon, sigma, rng, false);
+    data, data_true = generate_data(sys, T, umax, epsilon, sigma, rng, false);
     data_test[i] = data;
     system_test[i] = sys;
 
@@ -66,7 +67,7 @@ end
 
 
 report_qmi = [out_qmi[i].status==MOI.OPTIMAL for i in 1:N_experiments]'
-report_ss  = [(out_ss_dense[i].status==true ) && (out_ss_sparse[i].lambda < 1) for i in 1:N_experiments]'
+report_ss  = [(out_ss_dense[i].status==true ) && (out_ss_dense[i].lambda < 1) for i in 1:N_experiments]'
 report_ss_sparse  = [(out_ss_sparse[i].status==true) && (out_ss_sparse[i].lambda < 1) for i in 1:N_experiments]'
 report_ess  = [out_ess_dense[i].status==true for i in 1:N_experiments]'
 report_ess_sparse  = [out_ess_sparse[i].status==true for i in 1:N_experiments]'
