@@ -64,9 +64,10 @@ order = 1;
 
 
 # ss_out_dense = ss_quad(data_chi, order, false);
-ss_out_dense = ess_quad(data_chi, order, false);
+# ess_out_dense = ess_quad(data_chi, order, false);
+ess_out_sparse = ess_quad(data_chi, order, true);
 # @btime ss_out_full = ss_quad_full(data, order);
-K_rec = ss_out_dense.K;
+K_rec = ess_out_dense.K;
 # K_rec = ss_out_sparse.K;
 Acl_rec = A + B*K_rec;
 e_rec = abs.(eigvals(Acl_rec))
