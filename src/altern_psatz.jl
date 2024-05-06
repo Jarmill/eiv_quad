@@ -68,7 +68,7 @@ function make_mult_quad_dense(n, model, vars, order)
         Gram = Gram_curr;
 
         eye_n = 1* Matrix(I, n+1, n+1)
-        mon_kron =  kron(mon, eye_n);        
+        mon_kron =  kron(eye_n, mon);        
         #index out the polynomial pieces
         # s[i] = mon'*Gram_s*mon;
         # z[i] = mon'*Gram_z*mon;
@@ -81,8 +81,8 @@ function make_mult_quad_dense(n, model, vars, order)
         nv = length(mon);
 
         # @constraint(model, Gram_curr >= 0, PSDCone());
-        for i = 2:n
-            for j=i:n
+        for i = 2:(n+1)
+            for j=i:(n+1) #BUG: was 2:n, i:n
                 Zeta_curr = Zeta[i, j];                
                 # zeta_coeff = coefficients(Zeta_curr);
                 if i==j
@@ -91,7 +91,9 @@ function make_mult_quad_dense(n, model, vars, order)
                 else
                     Zeta_opp = Zeta[j, i];
                     #off-diagonal
-                    @constraint(model, coefficients(Zeta_opp + Zeta_curr)==0);
+                    # @constraint(model, coefficients(Zeta_opp + Zeta_curr)==0);
+                    @constraint(model, coefficients(Zeta_opp)==0);
+                    @constraint(model, coefficients(Zeta_curr)==0);
                 end
             end
         end
@@ -147,7 +149,7 @@ function make_mult_psd_dense(model, vars, order)
         Gram = Gram_curr;
 
         eye_n = 1* Matrix(I, n+1, n+1)
-        mon_kron =  kron(mon, eye_n);        
+        mon_kron =  kron(eye_n, mon);      #this may have been bugged: should have been (eye kron mon) rather than (mon kron eye)  
         #index out the polynomial pieces
         # s[i] = mon'*Gram_s*mon;
         # z[i] = mon'*Gram_z*mon;
@@ -279,6 +281,8 @@ function quad_psatz(q, order, model, data, vars, SPARSE=false)
             blocksize = [blocksize; mu[k].blocksize];
             psatz_term = psatz_term + sum(vec(mu[k].s).*h0[:, k]);
             psatz_term = psatz_term + mu[k].tau*data.epsilon[3]; 
+            #JuMP gives an add_to_expression!() warning (slow compilation), but DynamicPolynomials does 
+            #not support this in-place += operation. So we are stuck (at the moment) with slow compiles.
         end
         
     else

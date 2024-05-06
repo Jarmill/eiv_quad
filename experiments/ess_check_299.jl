@@ -39,7 +39,6 @@ data, data_true = generate_data(sys, T, umax, epsilon, sigma, rng);
 
 #test out the psatz
 vs = make_sys_vars(data);
-
 order = 1;
 
 # ss_out_sparse = ss_quad(data, order, true);

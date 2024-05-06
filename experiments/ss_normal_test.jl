@@ -66,6 +66,7 @@ order = 1;
 # @btime ss_out_sparse = ss_quad(data_chi, order+1, true);
 # @btime ss_out_dense = ss_quad(data_chi, order, false);
 ss_out_dense = ss_quad(data_chi, order, false);
+# ss_out_dense = ess_quad(data_chi, order, false);
 # @btime ss_out_full = ss_quad_full(data, order);
 K_rec = ss_out_dense.K;
 # K_rec = ss_out_sparse.K;

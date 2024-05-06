@@ -116,7 +116,7 @@ function ss_quad(data, order, SPARSE=false)
         blocksize = [blocksize; ps[k].blocksize];
     end
 
-    @constraint(model, lambda >= 0);
+    @constraint(model, lambda >= -100);
 
         
 
@@ -250,7 +250,7 @@ function ess_clean(sys)
 
     X = diagm(vec(v));
 
-    eta = 1e-2;
+    eta = 1e-3;
 
     #create the constraints
     Acl = sys.A*X + sys.B*S;
@@ -354,7 +354,7 @@ function ess_quad(data, order, SPARSE=false)
 
     con_pos = vec(M - Acl);
     con_neg = vec(M + Acl);
-    con_v = vec((1-eta)*v .- sum(M, dims=2) .- eta);
+    con_v = vec((1-eta)*v .- sum(M, dims=2));
     
     #TODO: CONVERT BACK TO ESS
     con_lam  = vec(lambda .- v);
@@ -371,7 +371,7 @@ function ess_quad(data, order, SPARSE=false)
     # finite-dimensional constraints
     @constraint(model, sum(v)==n);
     # @constraint(model, sum(v)==2);
-    # @constraint(model, con_lam >= 0);
+    @constraint(model, con_lam >= 0);
     @constraint(model, lambda >= 0);
     @constraint(model, con_lam_eta >= 0);
 

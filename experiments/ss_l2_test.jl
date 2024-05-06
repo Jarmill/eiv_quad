@@ -7,11 +7,14 @@
 #   worst-case:     lambda = 0.9392765535
 #   on true system: lambda = 0.4177393395
 #
+
 using eiv_quad
 using Random
-using Revise
+# using Revise
 using JuMP
 using LinearAlgebra
+using StatsFuns
+
 rng = MersenneTwister(13);
 
 # 2nd order system
@@ -22,14 +25,16 @@ B = [0.4170    0.0001
 n = 2;  m = 2;
 
 umax = 1;           # input bound
-T = 15;             # Time horizon
-R = 0.1;           # radius for sampling (works for R=0.5)
+# T = 15;             # Time horizon
+# R = 0.1;           # radius for sampling (works for R=0.5)
+T = 10;
+R = 0.04;
     
 model = Model();
 epsilon = [R; R; 0]
 sigma = [I, I, I];
 sys = system(A, B);
-data = generate_data(sys, T, umax, epsilon, sigma, rng);
+data, data_true = generate_data(sys, T, umax, epsilon, sigma, rng, false);
 
 #test out the psatz
 vs = make_sys_vars(data);
@@ -44,7 +49,7 @@ ess_out_dense = ess_quad(data, order, false);
 
 #in this experiment, sparse succeeds and dense fails
 
-# Acl_sparse = sys.A + sys.B*ss_out_dense.K;
+Acl_dense = sys.A + sys.B*ess_out_dense.K;
 
-eig_sparse = eigvals(Acl_sparse);
-lam_sparse = maximum(sum(Acl_sparse, dims=2));
+eig_sparse = eigvals(Acl_dense);
+lam_sparse = maximum(sum(Acl_dense, dims=2));

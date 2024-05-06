@@ -13,8 +13,7 @@ struct system
 end
 
 function generate_data(sys, T, umax, epsilon, Sigma, rng, normal=false)
-    #generate a trajectory with only x-type noise
-    #add u-type noise later
+    #generate a trajectory with x-type and u-type noise    
     n = size(sys.B, 1);
     m = size(sys.B, 2);
     Ubase = rand!(rng, zeros(m, T));
