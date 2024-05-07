@@ -14,7 +14,7 @@ m = 2;
 
 M = 1;
 #0.2: 5/10 for ESS, 2/10 for SS, 4/10 for QMI
-Rx = 0.25;           # radius for sampling (works for R=0.5)
+Rx = 0.225;           # radius for sampling (works for R=0.5)
 Ru = 0.1;           # radius for sampling (works for R=0.5)
 
 umax = 1;           # input bound
@@ -25,7 +25,7 @@ epsilon = [Rx; Ru; 0]
 sigma = [I, I, I];
 
 
-N_experiments = 10;
+N_experiments = 300;
 # N_experiments = 2;
 out_ss_sparse = Array{output_ss}(undef, N_experiments, 1);
 out_ss_dense = Array{output_ss}(undef, N_experiments, 1);
@@ -71,6 +71,6 @@ report_ss  = [(out_ss_dense[i].status==true ) && (out_ss_dense[i].lambda < 1) fo
 report_ss_sparse  = [(out_ss_sparse[i].status==true) && (out_ss_sparse[i].lambda < 1) for i in 1:N_experiments]'
 report_ess  = [out_ess_dense[i].status==true for i in 1:N_experiments]'
 report_ess_sparse  = [out_ess_sparse[i].status==true for i in 1:N_experiments]'
-save("./experiments/multi_experiments/report_ess_bg_dense_sparse.jld", "report_qmi", report_qmi, "report_ess", report_ess, "report_ess_sparse",
+save("./experiments/multi_experiments/report_ess_compare.jld", "report_qmi", report_qmi, "report_ess", report_ess, "report_ess_sparse",
        report_ess_sparse, "report_ss_sparse", report_ss_sparse, "report_ss", report_ss,  "out_qmi", out_qmi, "out_ess_dense", out_ess_dense,
          "out_ss_dense", out_ss_dense, "out_ss_sparse", out_ss_sparse, "data_test", data_test, "system_test", system_test, "order", order)
